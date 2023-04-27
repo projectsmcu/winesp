@@ -1,0 +1,4 @@
+#Thu Apr 27 17:47:21 WEST 2023
+base.0=/home/rouxmi/Documents/FCT/mobile/wine_esp/MobileApp/build/app/intermediates/dex/debug/mergeDexDebug/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex
