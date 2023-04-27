@@ -1,4 +1,4 @@
-# MPDW Project
+# SCMU Project
 
 #### Project members:
 - Rémi Bourdais <r.bourdais@campus.fct.unl.pt>(mailto:r.bourdais@campus.fct.unl.pt)
