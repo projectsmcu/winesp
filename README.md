@@ -1,16 +1,13 @@
-# wine_esp
+# SCMU Project
 
-A new Flutter project.
+#### Project members:
+- Rémi Bourdais <r.bourdais@campus.fct.unl.pt>(mailto:r.bourdais@campus.fct.unl.pt)
+- Louis CHATARD <l.chatard@campus.fct.unl.pt>(mailto:l.chatard@campus.fct.unl.pt)
 
-## Getting Started
+#### Project supervisors:
+Carmen Pires Morgado
+Nuno Manuel Ribeiro Preguiça
 
-This project is a starting point for a Flutter application.
+## Project description
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This project is made in the context of the course "Sistemas de Computação Móvel e Ubíqua" of the Master in Computer Science at the Nova FCT university.
