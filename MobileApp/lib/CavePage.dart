@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import 'CaveManagementPage.dart';
 
 class CavePage extends StatefulWidget {
@@ -14,7 +13,6 @@ class CavePage extends StatefulWidget {
 }
 
 class _CavePageState extends State<CavePage> {
-
   void _handleBottleRoute(bottleNumber, caveName) {
     Navigator.pushNamed(
       context,
@@ -69,9 +67,8 @@ class _CavePageState extends State<CavePage> {
                 itemBuilder: (BuildContext context, int index) {
                   return Container(
                     width: 160.0,
-                    color: Color(0xffE0D1A3),
+                    color: const Color(0xffE0D1A3),
                     child: Card(
-                      
                       child: Text('Stat $index'),
                     ),
                   );
@@ -92,13 +89,12 @@ class _CavePageState extends State<CavePage> {
             ),
           );
         },
-        backgroundColor:const Color(0xff980201),
+        backgroundColor: const Color(0xff980201),
         child: const Icon(Icons.add, color: Color(0xffffffff)),
       ),
     );
   }
 }
-
 
 class BottleArguments {
   final String caveName;

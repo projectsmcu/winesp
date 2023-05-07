@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:wine_esp/Sockets.dart';
+
+import 'Sockets.dart';
 
 class CaveManagementPage extends StatefulWidget {
-  const CaveManagementPage({Key? key}) : super(key: key);
+  const CaveManagementPage({Key? key, required this.socket}) : super(key: key);
 
+  final Sockets socket;
   final String title = 'WinEsp';
   static String caveRouteName = '/cave';
 
   @override
   State<CaveManagementPage> createState() => _CaveManagementPageState();
+
+  
 }
 
 class _CaveManagementPageState extends State<CaveManagementPage> {
@@ -15,6 +21,8 @@ class _CaveManagementPageState extends State<CaveManagementPage> {
 
   // contains a list of caves
   List<String> _caves = <String>[];
+  //center text telling it's loading
+  Widget _caveList = const Center(child: Text('Loading...', style: TextStyle(fontSize: 24),));
 
   // handle the /stats route
   void _handleCaveRoute(caveNumber) {
@@ -29,10 +37,30 @@ class _CaveManagementPageState extends State<CaveManagementPage> {
   }
 
   @override
+  void setState(VoidCallback fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     _caveController = ScrollController();
-    _caves = <String>['Cave Name 1', 'Cave Name 2', 'Cave Name 3'];
+    widget.socket.sendlistCaves('2');
+    widget.socket.receiveCaveList((data) {
+      if (data.length == 0) {
+        setState(() {
+          _caves = <String>[];
+          _caveList = const Text('No caves found');
+        });
+        return;
+      }
+      setState(() {
+        _caves = data.cast<String>();
+        _caveList = _buildCaveList();
+      });
+    });
   }
 
   @override
@@ -64,7 +92,7 @@ class _CaveManagementPageState extends State<CaveManagementPage> {
         child: Column(
           children: <Widget>[
             Expanded(
-              child: _buildCaveList(),
+              child: _caveList,
             ),
           ],
         ),
@@ -77,7 +105,7 @@ class _CaveManagementPageState extends State<CaveManagementPage> {
           });
         },
         tooltip: 'Add Cave',
-        backgroundColor:const Color(0xff980201),
+        backgroundColor: const Color(0xff980201),
         child: const Icon(Icons.add, color: Color(0xffffffff)),
       ),
     );

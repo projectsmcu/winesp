@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:wine_esp/HomePage.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'AddBottlePage.dart';
 import 'BottlePage.dart';
 import 'CaveManagementPage.dart';
+import 'Sockets.dart';
 import 'StatsPage.dart';
 import 'CaveStatsPage.dart';
 import 'CavePage.dart';
@@ -15,23 +15,12 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  void connect() async {
-    final channel = WebSocketChannel.connect(
-      Uri.parse('ws://127.0.0.1:5000'),
-    );
-    channel.stream.listen(
-      (data) {
-        print(data);
-      },
-      onError: (error) => print(error),
-    );
-  }
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    
+
+    Sockets socket = Sockets();
+    socket.connectSocket();
 
     return MaterialApp(
       title: 'Flutter Demo',
@@ -83,8 +72,8 @@ class _MainState extends State<MainPage> {
 
   final List<Widget> _widgetMenu = <Widget>[
     const StatsPage(),
-    const HomePage(),
-    const CaveManagementPage(),
+    HomePage(socket: Sockets(),),
+    CaveManagementPage(socket: Sockets(),),
   ];
 
   final List<String> _TitleMenu = <String>[

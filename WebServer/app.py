@@ -1,62 +1,45 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template
 from flask_socketio import SocketIO
-from random import random
-from threading import Lock
-from datetime import datetime
+import sqlite3
 
-"""
-Background Thread
-"""
-thread = None
-thread_lock = Lock()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'mojkljuc'
-socketio = SocketIO(app, cors_allowed_origins='*')
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
-"""
-Get current date time
-"""
-def get_current_datetime():
-    now = datetime.now()
-    return now.strftime("%m/%d/%Y %H:%M:%S")
-
-"""
-Generate random sequence of dummy sensor values and send it to our clients
-"""
-def background_thread():
-    print("Generating random sensor values")
-    while True:
-        dummy_sensor_value = round(random() * 100, 3)
-        socketio.emit('updateSensorData', {'value': dummy_sensor_value, "date": get_current_datetime()})
-        socketio.sleep(1)
-
-"""
-Serve root index file
-"""
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-"""
-Decorator for connect
-"""
 @socketio.on('connect')
 def connect():
-    global thread
-    print('Client connected')
+    print("a client connected")
 
-    global thread
-    with thread_lock:
-        if thread is None:
-            thread = socketio.start_background_task(background_thread)
-
-"""
-Decorator for disconnect
-"""
 @socketio.on('disconnect')
 def disconnect():
-    print('Client disconnected',  request.sid)
+    print('Client disconnected')
+
+@socketio.on('getCaves')
+def getCave(user):
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    #get the user's caves and for each cave get the cave's name , id ,  last reccorded data , total number of bottles in the user's caves by color
+    c.execute("SELECT cave_id, name FROM caves JOIN cave_users ON caves.id = cave_users.cave_id WHERE user_id = ?", (user,))
+    caves = c.fetchall()
+    id_caves = [cave[0] for cave in caves]
+    #get the cave's
+    stats,bottlesnumber,random_bottles = [],[],[]
+    for cave in id_caves:
+        c.execute("SELECT * FROM cave_data WHERE cave_id = ? ORDER BY time DESC LIMIT 1", (cave,))
+        stats.append(c.fetchone())
+        c.execute("SELECT color, SUM(id) FROM wine WHERE cave_id IN (SELECT cave_id FROM cave_users WHERE user_id = ?) GROUP BY color", (user,))
+        bottlesnumber.append(c.fetchone())
+        c.execute("SELECT * FROM wine WHERE cave_id IN (SELECT cave_id FROM cave_users WHERE user_id = ?) ORDER BY RANDOM() LIMIT 10", (user,))
+        random_bottles.append(c.fetchall())
+    socketio.emit('cave', [caves, stats, bottlesnumber, random_bottles])
+    
+
+
+@app.route('/')
+def hello():
+    return "Hello World!"
+
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='127.0.0.1', port=5000)
+    socketio.run(app,port=5021 ,host= '0.0.0.0')
