@@ -10,10 +10,21 @@ class StatsPage extends StatefulWidget {
 class _StatsPageState extends State<StatsPage> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: const Text('Stats Page'),
+    // the stats page contains a list of card with the summary statistics for each cave
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Stats'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const <Widget>[
+            Text(
+              'Stats',
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
-
-

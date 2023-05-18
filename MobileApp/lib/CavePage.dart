@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'CaveManagementPage.dart';
+import 'Arguments.dart';
+import 'CaveObject.dart';
 
 class CavePage extends StatefulWidget {
   const CavePage({Key? key}) : super(key: key);
@@ -26,7 +27,7 @@ class _CavePageState extends State<CavePage> {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as CaveArguments;
+    final args = ModalRoute.of(context)!.settings.arguments as CaveObject;
     // The page consists of 2 parts:
     // - a list of bottles as a horizontal scrollable list of cards
     // - a list of statistics as a vertical scrollable list of cards
@@ -46,7 +47,7 @@ class _CavePageState extends State<CavePage> {
                 itemBuilder: (BuildContext context, int index) {
                   return Container(
                     width: 160.0,
-                    color: Color(0xff980201),
+                    color: const Color(0xff980201),
                     child: GestureDetector(
                       child: Card(
                         child: Text('Bottle $index'),
@@ -85,7 +86,7 @@ class _CavePageState extends State<CavePage> {
             CavePage.addBottleRouteName,
             arguments: CaveArguments(
               args.name,
-              args.number,
+              args.id,
             ),
           );
         },
@@ -96,9 +97,6 @@ class _CavePageState extends State<CavePage> {
   }
 }
 
-class BottleArguments {
-  final String caveName;
-  final int bottleNumber;
 
-  BottleArguments(this.caveName, this.bottleNumber);
-}
+
+

@@ -6,7 +6,6 @@ import 'BottlePage.dart';
 import 'CaveManagementPage.dart';
 import 'Sockets.dart';
 import 'StatsPage.dart';
-import 'CaveStatsPage.dart';
 import 'CavePage.dart';
 
 void main() {
@@ -18,12 +17,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-
     Sockets socket = Sockets();
     socket.connectSocket();
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'WinEsp',
       theme: ThemeData(
           colorScheme: const ColorScheme.light(
             primary: Color(0xffE0D1A3),
@@ -36,7 +34,7 @@ class MyApp extends StatelessWidget {
           )),
       home: const MainPage(title: 'WinEsp'),
       routes: {
-        HomePage.statsRouteName: (context) => const CaveStatsPage(),
+        HomePage.caveRouteName: (context) => const CavePage(),
         CaveManagementPage.caveRouteName: (context) => const CavePage(),
         CavePage.bottleRouteName: (context) => const BottlePage(),
         CavePage.addBottleRouteName: (context) => const AddBottlePage(),
@@ -72,8 +70,12 @@ class _MainState extends State<MainPage> {
 
   final List<Widget> _widgetMenu = <Widget>[
     const StatsPage(),
-    HomePage(socket: Sockets(),),
-    CaveManagementPage(socket: Sockets(),),
+    HomePage(
+      socket: Sockets(),
+    ),
+    CaveManagementPage(
+      socket: Sockets(),
+    ),
   ];
 
   final List<String> _TitleMenu = <String>[

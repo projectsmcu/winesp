@@ -3,7 +3,7 @@ import 'package:socket_io_common/src/util/event_emitter.dart';
 
 // A singleton socket instance
 
-IO.Socket socket = IO.io('http://192.168.1.8:5021', <String, dynamic>{
+IO.Socket socket = IO.io('http://192.168.43.187:5021', <String, dynamic>{
   'transports': ['websocket'],
   'autoConnect': false,
 });
