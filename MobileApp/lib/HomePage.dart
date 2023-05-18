@@ -3,13 +3,14 @@
 import 'package:flutter/material.dart';
 import 'ExpandableFAB.dart';
 import 'Sockets.dart';
+import 'CaveObject.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key, required this.socket}) : super(key: key);
 
   final Sockets socket;
   final String title = 'WinEsp';
-  static String statsRouteName = '/stats';
+  static String caveRouteName = '/cavemanagement';
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -26,10 +27,10 @@ class _HomePageState extends State<HomePage> {
   ));
 
   // handle the /stats route
-  void _handleStatsRoute(caveNumber) {
+  void _handleCaveRoute(caveNumber) {
     Navigator.pushNamed(
       context,
-      HomePage.statsRouteName,
+      HomePage.caveRouteName,
       arguments: _caves[caveNumber],
     );
   }
@@ -82,26 +83,42 @@ class _HomePageState extends State<HomePage> {
     // in the bottom a horizontal scrollable list of bottles
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 13),
-      child: Container(
-        color: const Color(0xFFFFFFFF),
-        child: GestureDetector(
-          child: Card(
-            child: Column(
-              children: <Widget>[
-                Row(
-                  children: [
-                    _buildCaveName(index),
-                    _buildCaveStats(index),
-                  ],
-                ),
-                _buildWineList(index),
-              ],
-            ),
+      child: GestureDetector(
+        child: Card(
+          // make the top corners rounded
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
           ),
-          onTap: () {
-            _handleStatsRoute(index);
-          },
+          child: Column(
+            children: <Widget>[
+              const SizedBox(
+                height: 5,
+              ),
+              Row(
+                children: [
+                  const SizedBox(width: 10),
+                  _buildCaveName(index),
+                  const SizedBox(width: 10),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Container(
+                padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                decoration: const BoxDecoration(
+                  color: Color(0x45FFA194),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(15.0),
+                    bottomRight: Radius.circular(15.0),
+                  ),
+                ),
+                child: _buildWineList(index),
+              ),
+            ],
+          ),
         ),
+        onTap: () {
+          _handleCaveRoute(index);
+        },
       ),
     );
   }
@@ -117,13 +134,7 @@ class _HomePageState extends State<HomePage> {
                   _caves[index].name,
                   style: const TextStyle(fontSize: 32),
                 ),
-                Row(
-                  children: [
-                    _buildWineNumber(index, 'red'),
-                    _buildWineNumber(index, 'white'),
-                    _buildWineNumber(index, 'rose'),
-                  ],
-                ),
+                _buildCaveStats(index),
               ],
             ),
           ),
@@ -132,87 +143,105 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildWineNumber(int index, String color) {
-    return Expanded(
-      child: Row(
-        children: [
-          Expanded(
-            child: Image(
-              image: AssetImage('assets/images/$color-bottle.png'),
-              width: 32,
-              height: 32,
-              fit: BoxFit.contain,
-            ),
-          ),
-          const Expanded(
-            child: Text(
-              '0',
-              style: TextStyle(fontSize: 24),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildWineNumber(int index, String color) {
+  //   String num = '';
+  //   if (color == 'red') num = _caves[index].numberWines.red.toString();
+  //   if (color == 'white') num = _caves[index].numberWines.white.toString();
+  //   if (color == 'rose') num = _caves[index].numberWines.rose.toString();
+  //   return Expanded(
+  //     child: Row(
+  //       children: [
+  //         Expanded(
+  //           child: Image(
+  //             image: AssetImage('assets/images/$color-bottle.png'),
+  //             width: 32,
+  //             height: 32,
+  //             fit: BoxFit.contain,
+  //           ),
+  //         ),
+  //         Expanded(
+  //           child: Text(
+  //             num,
+  //             style: const TextStyle(fontSize: 18),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildCaveStats(int index) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(5, 0, 15, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    _caves[index].data.temperature.toString().substring(0, 4),
-                    style: TextStyle(fontSize: 16),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(5, 0, 15, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        _caves[index]
+                            .data
+                            .temperature
+                            .toString()
+                            .substring(0, 4),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const Icon(
+                        Icons.thermostat,
+                        size: 20,
+                      ),
+                    ],
                   ),
-                  const Icon(
-                    Icons.thermostat,
-                    size: 20,
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        _caves[index].data.humidity.toString().substring(0, 4),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const Icon(
+                        Icons.water_drop,
+                        size: 20,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(
-                    _caves[index].data.humidity.toString().substring(0, 4),
-                    style: TextStyle(fontSize: 16),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        _caves[index].data.light.toString().substring(0, 4),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const Icon(
+                        Icons.lightbulb,
+                        size: 20,
+                      ),
+                    ],
                   ),
-                  const Icon(
-                    Icons.water_drop,
-                    size: 20,
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        _caves[index].data.date.toString().split(' ')[1],
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const Icon(
+                        Icons.timer,
+                        size: 20,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(
-                    _caves[index].data.light.toString().substring(0, 4),
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const Icon(
-                    Icons.lightbulb,
-                    size: 20,
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(
-                    _caves[index].data.date.toString(),
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  const Icon(
-                    Icons.timer,
-                    size: 20,
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -220,17 +249,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildWineList(int index) {
-    return Container(
-      color: const Color(0x45FFA194),
-      child: SizedBox(
-        height: 250.0,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: 10,
-          itemBuilder: (BuildContext context, int index2) {
-            return _buildWineCardItem(index2, index);
-          },
-        ),
+    return SizedBox(
+      height: 250.0,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 10,
+        itemBuilder: (BuildContext context, int index2) {
+          return _buildWineCardItem(index2, index);
+        },
       ),
     );
   }
@@ -247,7 +273,8 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: Image(
-                      image: AssetImage('assets/images/${_caves[cave_index].wines[index].color}-bottle.png'),
+                      image: AssetImage(
+                          'assets/images/${_caves[cave_index].wines[index].color}-bottle.png'),
                       width: 150,
                       height: 240,
                       fit: BoxFit.contain,
@@ -288,7 +315,10 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    _caves[cave_index].wines[index].year.toString(),
+                                    _caves[cave_index]
+                                        .wines[index]
+                                        .year
+                                        .toString(),
                                     style: const TextStyle(fontSize: 12),
                                     textAlign: TextAlign.right,
                                   ),
@@ -343,13 +373,11 @@ class _HomePageState extends State<HomePage> {
     List<String> caveNames = [];
     List<CaveObject> caveObjects = [];
     List<Data> caveData = [];
-    List<int> caveWineIds = [];
     List<List<Wine>> caveWines = [];
     for (var i = 0; i < data[0].length; i++) {
       caveNames.add(data[0][i][1]);
       caveData.add(
           Data(data[1][i][1], data[1][i][2], data[1][i][3], data[1][i][4]));
-      caveWineIds.add(data[2][i][1]);
       for (var j = 0; j < data[3][i].length; j++) {
         //initializing the list of wines
         caveWines.add([]);
@@ -369,45 +397,4 @@ class _HomePageState extends State<HomePage> {
 
     return caveObjects;
   }
-}
-
-//the MaterialApp widget with the routes
-class CaveArguments {
-  final String name;
-  final int number;
-
-  CaveArguments(this.name, this.number);
-}
-
-class CaveObject {
-  final String name;
-  final int id;
-  final List<Wine> wines;
-  final Data data;
-
-  CaveObject(this.name, this.id, this.wines, this.data);
-}
-
-class Wine {
-  final String name;
-  final int id;
-  final String color;
-  final String region;
-  final String country;
-  final int year;
-  final double rating;
-  final double price;
-  final List<String> grapes;
-
-  Wine(this.name, this.id, this.color, this.region, this.country, this.year,
-      this.rating, this.price, this.grapes);
-}
-
-class Data {
-  final double temperature;
-  final double humidity;
-  final double light;
-  final String date;
-
-  Data(this.temperature, this.humidity, this.light, this.date);
 }

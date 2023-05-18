@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wine_esp/Arguments.dart';
 import 'package:wine_esp/Sockets.dart';
 
 import 'Sockets.dart';
@@ -12,8 +13,6 @@ class CaveManagementPage extends StatefulWidget {
 
   @override
   State<CaveManagementPage> createState() => _CaveManagementPageState();
-
-  
 }
 
 class _CaveManagementPageState extends State<CaveManagementPage> {
@@ -22,7 +21,11 @@ class _CaveManagementPageState extends State<CaveManagementPage> {
   // contains a list of caves
   List<String> _caves = <String>[];
   //center text telling it's loading
-  Widget _caveList = const Center(child: Text('Loading...', style: TextStyle(fontSize: 24),));
+  Widget _caveList = const Center(
+      child: Text(
+    'Loading...',
+    style: TextStyle(fontSize: 24),
+  ));
 
   // handle the /stats route
   void _handleCaveRoute(caveNumber) {
@@ -110,11 +113,4 @@ class _CaveManagementPageState extends State<CaveManagementPage> {
       ),
     );
   }
-}
-
-class CaveArguments {
-  final String name;
-  final int number;
-
-  CaveArguments(this.name, this.number);
 }

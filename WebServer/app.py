@@ -28,8 +28,8 @@ def getCave(user):
     for cave in id_caves:
         c.execute("SELECT * FROM cave_data WHERE cave_id = ? ORDER BY time DESC LIMIT 1", (cave,))
         stats.append(c.fetchone())
-        c.execute("SELECT color, SUM(id) FROM wine WHERE cave_id IN (SELECT cave_id FROM cave_users WHERE user_id = ?) GROUP BY color", (user,))
-        bottlesnumber.append(c.fetchone())
+        c.execute("SELECT color, COUNT(id) FROM wine WHERE cave_id IN (SELECT cave_id FROM cave_users WHERE user_id = ?) GROUP BY color", (user,))
+        bottlesnumber.append(c.fetchall())
         c.execute("SELECT * FROM wine WHERE cave_id IN (SELECT cave_id FROM cave_users WHERE user_id = ?) ORDER BY RANDOM() LIMIT 10", (user,))
         random_bottles.append(c.fetchall())
     socketio.emit('cave', [caves, stats, bottlesnumber, random_bottles])
