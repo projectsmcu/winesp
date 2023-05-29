@@ -45,4 +45,6 @@ app.*.map.json
 .code
 .idea
 
-
+# PlatformIO related
+.pio
+ESP/.vscode/*
