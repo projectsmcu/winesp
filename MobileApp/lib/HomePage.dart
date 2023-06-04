@@ -1,14 +1,22 @@
 //The home page
+import 'dart:convert';
+import "dart:io";
 
 import 'package:flutter/material.dart';
+import 'package:wine_esp/AddBottlePage.dart';
+import 'package:wine_esp/AddCavePage.dart';
+import 'package:wine_esp/BottlePage.dart';
+import 'package:wine_esp/CavePage.dart';
 import 'ExpandableFAB.dart';
 import 'Sockets.dart';
 import 'CaveObject.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key, required this.socket}) : super(key: key);
+  const HomePage({Key? key, required this.socket, required this.userId})
+      : super(key: key);
 
   final Sockets socket;
+  final String userId;
   final String title = 'WinEsp';
   static String caveRouteName = '/cavemanagement';
 
@@ -27,11 +35,87 @@ class _HomePageState extends State<HomePage> {
   ));
 
   // handle the /stats route
-  void _handleCaveRoute(caveNumber) {
-    Navigator.pushNamed(
+  void _handleCaveRoute(caveID) async {
+    await Navigator.push(
       context,
-      HomePage.caveRouteName,
-      arguments: _caves[caveNumber],
+      MaterialPageRoute(
+        builder: (context) => CavePage(
+            caveId: caveID,
+            key: const Key('CavePage'),
+            socket: widget.socket,
+            onDeleted: () {
+              widget.socket.sendlistCavesHome(widget.userId);
+              widget.socket.receiveCaveListHome((data) {
+                if (data[0].length == 0) {
+                  setState(() {
+                    // make a widget that says no caves found in the middle of the screen
+                    _caveCardList = Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                'No caves found',
+                                style: TextStyle(fontSize: 24),
+                              ),
+                            ],
+                          ),
+                        ]);
+                  });
+                } else {
+                  setState(() {
+                    _caves = convertHome(data);
+                    _caveCardList = _buildCaveCardList();
+                  });
+                }
+              });
+              Navigator.of(context).pop();
+            }),
+      ),
+    );
+  }
+
+  void _handleBottleRoute(wine, caveID) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BottlePage(
+            key: const Key('CavePage'),
+            socket: widget.socket,
+            wine: wine,
+            caveId: caveID.toString(),
+            onBottlePage: () {
+              widget.socket.sendlistCavesHome(widget.userId);
+              widget.socket.receiveCaveListHome((data) {
+                if (data[0].length == 0) {
+                  setState(() {
+                    // make a widget that says no caves found in the middle of the screen
+                    _caveCardList = Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                'No caves found',
+                                style: TextStyle(fontSize: 24),
+                              ),
+                            ],
+                          ),
+                        ]);
+                  });
+                } else {
+                  setState(() {
+                    _caves = convertHome(data);
+                    _caveCardList = _buildCaveCardList();
+                  });
+                }
+              });
+            }),
+      ),
     );
   }
 
@@ -46,18 +130,32 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _homeController = ScrollController();
-    widget.socket.sendlistCaves('1');
-    widget.socket.receiveCaveList((data) {
+    widget.socket.sendlistCavesHome(widget.userId);
+    widget.socket.receiveCaveListHome((data) {
       if (data[0].length == 0) {
         setState(() {
-          _caveCardList = const Text('No caves found');
+          // make a widget that says no caves found in the middle of the screen
+          _caveCardList = Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'No caves found',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+              ]);
         });
-        return;
+      } else {
+        setState(() {
+          _caves = convertHome(data);
+          _caveCardList = _buildCaveCardList();
+        });
       }
-      setState(() {
-        _caves = convert(data);
-        _caveCardList = _buildCaveCardList();
-      });
     });
   }
 
@@ -68,12 +166,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCaveCardList() {
-    return ListView.builder(
-      controller: _homeController,
-      itemCount: _caves.length,
-      itemBuilder: (BuildContext context, int index) {
-        return _buildCaveCardItem(index);
-      },
+    return Container(
+      color: const Color(0x80F6F6F6),
+      child: ListView.builder(
+        controller: _homeController,
+        itemCount: _caves.length,
+        itemBuilder: (BuildContext context, int index) {
+          return _buildCaveCardItem(index);
+        },
+      ),
     );
   }
 
@@ -85,6 +186,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 13),
       child: GestureDetector(
         child: Card(
+          color: const Color(0xFF60A26D),
           // make the top corners rounded
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
@@ -96,16 +198,14 @@ class _HomePageState extends State<HomePage> {
               ),
               Row(
                 children: [
-                  const SizedBox(width: 10),
                   _buildCaveName(index),
-                  const SizedBox(width: 10),
                 ],
               ),
               const SizedBox(height: 5),
               Container(
                 padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
                 decoration: const BoxDecoration(
-                  color: Color(0x45FFA194),
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(15.0),
                     bottomRight: Radius.circular(15.0),
@@ -117,7 +217,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         onTap: () {
-          _handleCaveRoute(index);
+          print(_caves[index].id);
+          _handleCaveRoute(_caves[index].id);
         },
       ),
     );
@@ -184,11 +285,7 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Text(
-                        _caves[index]
-                            .data
-                            .temperature
-                            .toString()
-                            .substring(0, 4),
+                        getSmallText(_caves[index].data.temperature),
                         style: const TextStyle(fontSize: 16),
                       ),
                       const Icon(
@@ -202,7 +299,7 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Text(
-                        _caves[index].data.humidity.toString().substring(0, 4),
+                        getSmallText(_caves[index].data.humidity),
                         style: const TextStyle(fontSize: 16),
                       ),
                       const Icon(
@@ -216,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Text(
-                        _caves[index].data.light.toString().substring(0, 4),
+                        getSmallText(_caves[index].data.light),
                         style: const TextStyle(fontSize: 16),
                       ),
                       const Icon(
@@ -253,7 +350,7 @@ class _HomePageState extends State<HomePage> {
       height: 250.0,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 10,
+        itemCount: _caves[index].wines.length,
         itemBuilder: (BuildContext context, int index2) {
           return _buildWineCardItem(index2, index);
         },
@@ -266,83 +363,181 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.fromLTRB(2, 4, 2, 4),
         child: SizedBox(
           width: 150.0,
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Image(
-                      image: AssetImage(
-                          'assets/images/${_caves[cave_index].wines[index].color}-bottle.png'),
-                      width: 150,
-                      height: 240,
-                      fit: BoxFit.contain,
+          child: GestureDetector(
+            child: Card(
+              color: const Color(0xffCAD293),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _caves[cave_index].wines[index].image != 'no-image'
+                          ? Image(
+                              image: Image.memory(
+                                base64Decode(
+                                    _caves[cave_index].wines[index].image),
+                              ).image,
+                              width: 150,
+                              height: 240,
+                              fit: BoxFit.contain,
+                            )
+                          : Image(
+                              image: AssetImage(
+                                  'assets/images/${_caves[cave_index].wines[index].color}-bottle.png'),
+                              width: 150,
+                              height: 240,
+                              fit: BoxFit.contain,
+                            ),
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          // The name of the wine center at the top the region on the left and the year on the right
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
-                              child: Row(
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            // The name of the wine center at the top the region on the left and the year on the right
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _caves[cave_index].wines[index].name,
+                                        style: const TextStyle(fontSize: 16),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      _caves[cave_index].wines[index].name,
-                                      style: const TextStyle(fontSize: 16),
-                                      textAlign: TextAlign.center,
+                                      _caves[cave_index].wines[index].region,
+                                      style: const TextStyle(fontSize: 14),
+                                      textAlign: TextAlign.left,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _caves[cave_index].wines[index].region,
-                                    style: const TextStyle(fontSize: 14),
-                                    textAlign: TextAlign.left,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _caves[cave_index]
+                                          .wines[index]
+                                          .year
+                                          .toString(),
+                                      style: const TextStyle(fontSize: 12),
+                                      textAlign: TextAlign.right,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _caves[cave_index]
-                                        .wines[index]
-                                        .year
-                                        .toString(),
-                                    style: const TextStyle(fontSize: 12),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
+            onTap: () {
+              _handleBottleRoute(
+                  _caves[cave_index].wines[index], _caves[index].id);
+            },
           ),
         ));
   }
 
-  void _showAction(BuildContext context, int index) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('You selected: $index'),
-      ),
-    );
+  void _showAction(int index) {
+    switch (index) {
+      case 0:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AddBottlePage(
+              socket: widget.socket,
+              caveId: _caves[0].id.toString(),
+              cavename: _caves[0].name,
+              onBottleAdded: () {
+                widget.socket.sendlistCavesHome(widget.userId);
+                widget.socket.receiveCaveListHome((data) {
+                  if (data[0].length == 0) {
+                    setState(() {
+                      // make a widget that says no caves found in the middle of the screen
+                      _caveCardList = Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text(
+                                  'No caves found',
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                              ],
+                            ),
+                          ]);
+                    });
+                  } else {
+                    setState(() {
+                      _caves = convertHome(data);
+                      _caveCardList = _buildCaveCardList();
+                    });
+                  }
+                });
+              },
+            ),
+          ),
+        );
+        break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AddCavePage(
+              key: const Key('add_cave_page'),
+              socket: widget.socket,
+              userId: widget.userId,
+              onCaveAdded: () {
+                widget.socket.sendlistCavesHome(widget.userId);
+                widget.socket.receiveCaveListHome((data) {
+                  if (data[0].length == 0) {
+                    setState(() {
+                      // make a widget that says no caves found in the middle of the screen
+                      _caveCardList = Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text(
+                                  'No caves found',
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                              ],
+                            ),
+                          ]);
+                    });
+                  } else {
+                    setState(() {
+                      _caves = convertHome(data);
+                      _caveCardList = _buildCaveCardList();
+                    });
+                  }
+                });
+              },
+            ),
+          ),
+        );
+        break;
+      case 2:
+        break;
+    }
   }
 
   @override
@@ -353,48 +548,34 @@ class _HomePageState extends State<HomePage> {
         distance: 112.0,
         children: [
           ActionButton(
-            onPressed: () => _showAction(context, 0),
-            icon: const Icon(Icons.format_size),
+            onPressed: () => _showAction(0),
+            icon: Image.asset(
+              'assets/images/bottle.png',
+              width: 30,
+              height: 30,
+              fit: BoxFit.contain,
+              color: const Color(0xff222222),
+            ),
           ),
           ActionButton(
-            onPressed: () => _showAction(context, 1),
-            icon: const Icon(Icons.insert_photo),
+            onPressed: () => _showAction(1),
+            icon: const Icon(Icons.shelves),
           ),
           ActionButton(
-            onPressed: () => _showAction(context, 2),
-            icon: const Icon(Icons.videocam),
+            onPressed: () => _showAction(2),
+            icon: const Icon(Icons.warning),
           ),
         ],
       ),
     );
   }
 
-  List<CaveObject> convert(List<dynamic> data) {
-    List<String> caveNames = [];
-    List<CaveObject> caveObjects = [];
-    List<Data> caveData = [];
-    List<List<Wine>> caveWines = [];
-    for (var i = 0; i < data[0].length; i++) {
-      caveNames.add(data[0][i][1]);
-      caveData.add(
-          Data(data[1][i][1], data[1][i][2], data[1][i][3], data[1][i][4]));
-      for (var j = 0; j < data[3][i].length; j++) {
-        //initializing the list of wines
-        caveWines.add([]);
-        caveWines[i].add(Wine(
-            data[3][i][j][1],
-            data[3][i][j][0],
-            data[3][i][j][3],
-            data[3][i][j][5],
-            data[3][i][j][4],
-            data[3][i][j][6],
-            data[3][i][j][8],
-            data[3][i][j][9],
-            [data[3][i][j][7]]));
-      }
-      caveObjects.add(CaveObject(caveNames[i], i, caveWines[i], caveData[i]));
+  String getSmallText(double value) {
+    // if the temperature is more than 4 digits long cut it down to 4 digits
+    if (value.toString().length > 4) {
+      value = double.parse(value.toString().substring(0, 4));
     }
-
-    return caveObjects;
+    String temp = value.toString();
+    return temp;
   }
 }

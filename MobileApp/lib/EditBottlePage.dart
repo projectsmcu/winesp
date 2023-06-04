@@ -3,49 +3,68 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wine_esp/CaveObject.dart';
 
 import 'Sockets.dart';
 
-class AddBottlePage extends StatefulWidget {
-  const AddBottlePage(
+class EditBottlePage extends StatefulWidget {
+  const EditBottlePage(
       {Key? key,
       required this.socket,
+      required this.wine,
       required this.caveId,
-      required this.cavename,
       required this.onBottleAdded})
       : super(key: key);
 
+  final Wine wine;
   final String caveId;
-  final String cavename;
   final Function() onBottleAdded;
 
-  static const String routeName = '/addBottle';
+  static const String routeName = '/EditBottle';
 
   final Sockets socket;
 
   @override
-  _AddBottlePageState createState() => _AddBottlePageState();
+  _EditBottlePageState createState() => _EditBottlePageState();
 }
 
-class _AddBottlePageState extends State<AddBottlePage> {
+class _EditBottlePageState extends State<EditBottlePage> {
   final _formKey = GlobalKey<FormState>();
-  final _bottleNameController = TextEditingController();
-  final _bottleTypeController = TextEditingController(text: 'red');
-  final _bottleCountryController = TextEditingController();
-  final _bottleRegionController = TextEditingController();
-  final _bottleGrapeController = TextEditingController();
-  final _bottleYearController = TextEditingController(text: '2020');
-  final _bottlePriceController = TextEditingController(text: "15");
-  final _bottleQuantityController = TextEditingController(text: '1');
-  final _bottleCommentController = TextEditingController();
-  final _bottleRatingController = TextEditingController(text: '3.0');
-
-  File? _imageFile;
+  late TextEditingController _bottleNameController;
+  late TextEditingController _bottleTypeController;
+  late TextEditingController _bottleCountryController;
+  late TextEditingController _bottleRegionController;
+  late TextEditingController _bottleGrapeController;
+  late TextEditingController _bottleYearController;
+  late TextEditingController _bottlePriceController;
+  late TextEditingController _bottleQuantityController;
+  late TextEditingController _bottleCommentController;
+  late TextEditingController _bottleRatingController;
+  String base64image = '';
   String _imageName = 'No picture selected';
 
   @override
   void initState() {
     super.initState();
+    _bottleNameController = TextEditingController(text: widget.wine.name);
+    _bottleTypeController = TextEditingController(text: widget.wine.color);
+    _bottleCountryController = TextEditingController(text: widget.wine.country);
+    _bottleRegionController = TextEditingController(text: widget.wine.region);
+    _bottleGrapeController = TextEditingController(text: widget.wine.grapes);
+    _bottleYearController =
+        TextEditingController(text: widget.wine.year.toString());
+    _bottlePriceController =
+        TextEditingController(text: widget.wine.price.toString());
+    _bottleQuantityController =
+        TextEditingController(text: widget.wine.quantity.toString());
+    _bottleCommentController =
+        TextEditingController(text: widget.wine.description);
+    _bottleRatingController =
+        TextEditingController(text: widget.wine.rating.toString());
+    if (widget.wine.image != 'no-image') {
+      base64image = widget.wine.image;
+      _imageName = "${widget.wine.name}.jpg";
+    }
   }
 
   @override
@@ -77,16 +96,12 @@ class _AddBottlePageState extends State<AddBottlePage> {
     final String bottleComment = _bottleCommentController.text;
     final String bottleRating = _bottleRatingController.text;
 
-    String base64image;
     // check if the image is null if not convert it to base64
-    if (_imageFile != null) {
-      final bytes = _imageFile!.readAsBytesSync();
-      base64image = base64Encode(bytes);
-    } else {
+    if (base64image == '') {
       base64image = 'no-image';
     }
-    // send the values to the server
-    widget.socket.addBottle(
+    widget.socket.modifyBottle(
+        widget.wine.id.toString(),
         widget.caveId,
         bottleName,
         bottleColor,
@@ -103,12 +118,13 @@ class _AddBottlePageState extends State<AddBottlePage> {
 
   Future<void> _pickImage() async {
     // pick an image from the gallery with a size limit of 1MB
-    final ImagePicker _picker = ImagePicker();
-    final XFile? pickedFile = await _picker.pickImage(
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(
         source: ImageSource.gallery, imageQuality: 50, maxWidth: 1024);
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        // convert the image to base64
+        base64image = base64Encode(File(pickedFile.path).readAsBytesSync());
         _imageName = pickedFile.name;
       });
     }
@@ -120,7 +136,7 @@ class _AddBottlePageState extends State<AddBottlePage> {
       appBar: AppBar(
         title: Text(
             style: const TextStyle(color: Color(0xff222222)),
-            "Add bottle in ${widget.cavename}"),
+            "Modify bottle ${widget.wine.name}"),
         backgroundColor: const Color(0xfffaeab1),
         iconTheme: const IconThemeData(color: Color(0xff222222)),
       ),
@@ -439,7 +455,7 @@ class _AddBottlePageState extends State<AddBottlePage> {
                     if (_formKey.currentState!.validate()) {
                       _saveBottle();
                       widget.socket
-                          .receiveAddBottle(() => widget.onBottleAdded());
+                          .receiveModifyBottle(() => widget.onBottleAdded());
                       Navigator.pop(context);
                     }
                   },
