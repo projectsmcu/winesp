@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-
 @immutable
 class ExpandableFab extends StatefulWidget {
   const ExpandableFab({
@@ -80,16 +79,23 @@ class _ExpandableFabState extends State<ExpandableFab>
       height: 56.0,
       child: Center(
         child: Material(
-          shape: const CircleBorder(),
+          // make a black border around the close button
+          shape: const CircleBorder(
+            side: BorderSide(
+              color: Color(0xff222222),
+              width: 2.0,
+            ),
+          ),
           clipBehavior: Clip.antiAlias,
           elevation: 4.0,
+          color: const Color(0xffB8CE9E),
           child: InkWell(
             onTap: _toggle,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
               child: Icon(
                 Icons.close,
-                color: Theme.of(context).primaryColor,
+                color: Color(0xff2F4858),
               ),
             ),
           ),
@@ -134,8 +140,18 @@ class _ExpandableFabState extends State<ExpandableFab>
           curve: const Interval(0.25, 1.0, curve: Curves.easeInOut),
           duration: const Duration(milliseconds: 250),
           child: FloatingActionButton(
+            // add a border to the button
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50.0),
+              side: const BorderSide(color: Color(0xff222222), width: 2.0),
+            ),
+            backgroundColor: const Color(0xffB8CE9E),
             onPressed: _toggle,
-            child: const Icon(Icons.create),
+            child: const Icon(
+              Icons.add,
+              color: Color(0xff2F4858),
+              size: 30,
+            ),
           ),
         ),
       ),
@@ -196,16 +212,20 @@ class ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Material(
-      shape: const CircleBorder(),
+      shape: const CircleBorder(
+        side: BorderSide(
+          color: Color(0xff222222),
+          width: 1.5,
+        ),
+      ),
       clipBehavior: Clip.antiAlias,
-      color: theme.colorScheme.secondary,
+      color: const Color(0xffB8CE9E),
       elevation: 4.0,
       child: IconButton(
         onPressed: onPressed,
         icon: icon,
-        color: theme.colorScheme.onSecondary,
+        color: const Color(0xff2F4858),
       ),
     );
   }

@@ -45,10 +45,15 @@ c.execute('''CREATE TABLE cave_data
 
 conn.commit()
 
+c.execute('''CREATE TABLE cave_value
+                (cave_id INTEGER PRIMARY KEY, temperatureWarning REAL, temperatureCritical REAL, humidityWarning REAL, humidityCritical REAL, lightWarning REAL, lightCritical REAL)''')
+
+conn.commit()
+
 # The table wine will contain the wine name, color, country, region, year, grape, price, rating, description, id and the cave id
 
 c.execute('''CREATE TABLE wine
-                (id INTEGER PRIMARY KEY, quantity INTEGER , name TEXT, color TEXT, country TEXT, region TEXT, year INTEGER, grape TEXT, price REAL, rating REAL, description TEXT, cave_id INTEGER)''')
+                (name TEXT,id INTEGER PRIMARY KEY , color TEXT, region TEXT, country TEXT, year INTEGER, rating REAL, price REAL, grape TEXT, quantity INTEGER, description TEXT, cave_id INTEGER)''')
 
 # fill different tables with data
 
@@ -64,16 +69,22 @@ c.execute("INSERT INTO cave_users VALUES (2, 1)")
 c.execute("INSERT INTO cave_users VALUES (3, 1)")
 c.execute("INSERT INTO cave_users VALUES (1, 2)")
 
+c.execute("INSERT INTO cave_value VALUES (1, 18, 25, 50, 70, 50, 70)")
+c.execute("INSERT INTO cave_value VALUES (2, 17, 26, 51, 71, 51, 71)")
+c.execute("INSERT INTO cave_value VALUES (3, 16, 27, 52, 72, 52, 72)")
+
 conn.commit()
 
 #fill data table with random data for 300 entries but all different with 10 seconds between each entry
 
 
+initial_time = time.strftime('%Y-%m-%d %H:%M:%S')
+print(initial_time)
 
 for i in range(300):
-    c.execute("INSERT INTO cave_data VALUES (1, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S').format(i*2)))
-    c.execute("INSERT INTO cave_data VALUES (2, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S').format(i*5)))
-    c.execute("INSERT INTO cave_data VALUES (3, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S').format(i*10)))
+    c.execute("INSERT INTO cave_data VALUES (1, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) + 300*i))))
+    c.execute("INSERT INTO cave_data VALUES (2, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) + 300*i))))
+    c.execute("INSERT INTO cave_data VALUES (3, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) + 300*i))))
 
 
 conn.commit()
@@ -82,9 +93,9 @@ conn.commit()
 wine_color = ["red", "white", "rose"]
 
 for i in range(100):
-    c.execute("INSERT INTO wine VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (i, "Wine"+str(i),random.randint(1,10), wine_color[random.randint(0,2)] , "France", "Bordeaux", 2015, "Merlot", random.uniform(0, 100), random.uniform(0, 5), "This is a description of the wine", 1))
-    c.execute("INSERT INTO wine VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (i+100, "Wine"+str(i+100),random.randint(1,10), wine_color[random.randint(0,2)], "France", "Bordeaux", 2015, "Merlot", random.uniform(0, 100), random.uniform(0, 5), "This is a description of the wine", 2))
-    c.execute("INSERT INTO wine VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (i+200, "Wine"+str(i+200),random.randint(1,10), wine_color[random.randint(0,2)], "France", "Bordeaux", 2015, "Merlot", random.uniform(0, 100), random.uniform(0, 5), "This is a description of the wine", 3))
+    c.execute("INSERT INTO wine (name , color , country , region , year , grape , price ,quantity , rating , description , cave_id ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ("Wine"+str(i), wine_color[random.randint(0,2)] , "France", "Bordeaux", 2015, "Merlot", random.uniform(0, 100), random.randint(1,10),random.uniform(0, 5), "This is a description of the wine", 1))
+    c.execute("INSERT INTO wine (name , color , country , region , year , grape , price ,quantity , rating , description , cave_id ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ("Wine"+str(i+100), wine_color[random.randint(0,2)], "France", "Bordeaux", 2015, "Merlot", random.uniform(0, 100), random.randint(1,10),random.uniform(0, 5), "This is a description of the wine", 2))
+    c.execute("INSERT INTO wine (name , color , country , region , year , grape , price ,quantity , rating , description , cave_id ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ("Wine"+str(i+200) , wine_color[random.randint(0,2)], "France", "Bordeaux", 2015, "Merlot", random.uniform(0, 100), random.randint(1,10),random.uniform(0, 5), "This is a description of the wine", 3))
 
 conn.commit()
 
