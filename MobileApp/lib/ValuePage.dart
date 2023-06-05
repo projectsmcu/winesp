@@ -96,12 +96,12 @@ class _ValuePageState extends State<ValuePage> {
                   height: 20,
                 ),
                 Row(
-                  children: const [
+                  children: [
                     Expanded(
                       child: Text(
-                        'Set Warning/Critical Values',
-                        style:
-                            TextStyle(fontSize: 18, color: Color(0xff222222)),
+                        'Set Warning/Critical Values for ${widget.type.toString()}',
+                        style: const TextStyle(
+                            fontSize: 18, color: Color(0xff222222)),
                       ),
                     ),
                   ],
