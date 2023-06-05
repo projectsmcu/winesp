@@ -105,8 +105,6 @@ List<CaveObject> convertHome(List<dynamic> data) {
   caveWines.add([]);
   for (var i = 0; i < data[0].length; i++) {
     caveNames.add(data[0][i][1]);
-    print(data[2][i]);
-
     caveData
         .add(Data(data[1][i][1], data[1][i][2], data[1][i][3], data[1][i][4]));
     for (var j = 0; j < data[2][i].length; j++) {
@@ -164,9 +162,6 @@ CaveObject convertPage(List<dynamic> data) {
   caveNames = data[0][0];
   caveData = Data(data[1][1], data[1][2], data[1][3], data[1][4]);
   for (var j = 0; j < data[2].length; j++) {
-    if (data[4][j] == null) {
-      print(data[4][j]);
-    }
     caveWines.add(Wine(
         data[2][j][0],
         data[2][j][1],
@@ -196,7 +191,6 @@ List<CaveObjectStats> convertPageData(List<dynamic> data) {
   List<String> caveNames = [];
   List<CaveObjectStats> caveObjects = [];
   List<List<Data>> caveData = [];
-  print(data[0][3]);
   for (var i = 0; i < data.length; i++) {
     caveData.add([]);
     for (var j = 0; j < data[i][2].length; j++) {

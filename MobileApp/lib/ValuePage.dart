@@ -152,7 +152,8 @@ class _ValuePageState extends State<ValuePage> {
                   children: [
                     Expanded(
                       child: Text(
-                        _warningController.text,
+                        _warningController.text +
+                            (widget.type == "temperature" ? "°C" : "%"),
                         style: const TextStyle(
                             fontSize: 24, color: Color(0xff222222)),
                         textAlign: TextAlign.center,
@@ -204,7 +205,8 @@ class _ValuePageState extends State<ValuePage> {
                   children: [
                     Expanded(
                       child: Text(
-                        _criticalController.text,
+                        _criticalController.text +
+                            (widget.type == "temperature" ? "°C" : "%"),
                         style: const TextStyle(
                             fontSize: 24, color: Color(0xff222222)),
                         textAlign: TextAlign.center,

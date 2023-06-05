@@ -15,10 +15,12 @@
 #define PIN_GREEN  18 // ESP32 pin GIOP18 connected to green LED - green cable
 #define PIN_BLUE   19 // ESP32 pin GIOP19 connected to blue LED - blue cable
 
+#define PIN_BUTTON  12 // ESP32 pin GIOP5 connected to button - purple cable
+
 // Replace with your network credentials
-const char* ssid = "ZON-AFC0";
-const char* password = "f933af58161c";
-const char* serverURL = "http://192.168.1.9:5000/exchange-data";
+const char* ssid = "Wifi remi";
+const char* password = "remilebg";
+const char* serverURL = "http://192.168.43.187:5021";
 
 DHT dht_sensor(DHT_SENSOR_PIN, DHT_SENSOR_TYPE);
 
@@ -29,6 +31,11 @@ int noteDurations[] = {
   4, 8, 8, 4, 4, 4, 4, 4
 };
 const int JSON_BUFFER_SIZE = 256;
+
+int lastState = HIGH; // the previous state from the input pin
+int currentState;
+
+int caveId;
 
 
 void setup() {
@@ -47,6 +54,7 @@ void setup() {
   pinMode(PIN_RED, OUTPUT); // initialize the red LED
   pinMode(PIN_GREEN, OUTPUT); // initialize the green LED
   pinMode(PIN_BLUE, OUTPUT);  // initialize the blue LED
+  pinMode(PIN_BUTTON, INPUT_PULLUP);
 
 }
 
@@ -81,6 +89,8 @@ void printValues(float humi, float temp, int ligth) {
 
 }
 
+
+
 void setColor(int R, int G, int B) {
   // turns on/off the LED as requested by the server
   digitalWrite(PIN_RED, R);
@@ -106,28 +116,37 @@ void sendDataToServer(float temperature, float humidity, int light) {
     Serial.println("Not connected to WiFi. Cannot communicate data.");
   }
 
-  // Create the form data to send
-  String formData = "temperature=" + String(temperature) + "&humidity=" + String(humidity) + "&light=" + String(light);
+
+  //build JSON of the form data
+  StaticJsonDocument<JSON_BUFFER_SIZE> doc;
+  doc["temperature"] = temperature;
+  doc["humidity"] = humidity;
+  doc["light"] = light;
+  doc["caveId"] = caveId;
 
   // Initialize the HTTPClient object
   HTTPClient http;
 
   // Set the target server and endpoint
-  http.begin(serverURL);
+  http.begin((serverURL + std::string("/exchange-data")).c_str());
   
   // Set the content type header
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http.addHeader("Content-Type", "application/json");
 
   // Send the POST request with the form data
-  int httpResponseCode = http.POST(formData);
+  int httpResponseCode = http.POST(doc.as<String>());
 
-  if (httpResponseCode > 0) {
+  if (httpResponseCode > 0) { 
     String response = http.getString();
     Serial.println("Server response: [" + String(httpResponseCode) + "] - " + response);
+    DynamicJsonDocument jsonDoc(JSON_BUFFER_SIZE);
+    DeserializationError error = deserializeJson(jsonDoc, response);
+    setColor(jsonDoc["red"], jsonDoc["green"], jsonDoc["blue"]); // set the LED color depending on the conditions
+    playSound(jsonDoc["alert"]); // play the buzzer if needed
   } else {
-    Serial.print("Error sending request. Error code: ");
+    Serial.print("Error recieving data. Error code: ");
     Serial.println(httpResponseCode);
-    for (int i = 0; i < 5; i++) { // blink the LED if can't communicate
+        for (int i = 0; i < 5; i++) { // blink the LED if can't communicate
       setColor(1, 1, 1);
       delay(500);
       setColor(0, 0, 0);
@@ -138,7 +157,7 @@ void sendDataToServer(float temperature, float humidity, int light) {
   http.end();
 }
 
-void recieveData() {
+void getIdFromServer() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Not connected to WiFi. Cannot communicate data.");
   }
@@ -146,8 +165,9 @@ void recieveData() {
   // Initialize the HTTPClient object
   HTTPClient http;
 
+  
   // Set the target server
-  http.begin(serverURL);
+  http.begin((serverURL + std::string("/get-id")).c_str());
 
   // Send the POST request with the form data
   int httpCode = http.GET();
@@ -158,8 +178,8 @@ void recieveData() {
     Serial.println("Server response: [" + String(httpCode) + "] - " + payload);
     DynamicJsonDocument jsonDoc(JSON_BUFFER_SIZE);
     DeserializationError error = deserializeJson(jsonDoc, payload);
-    setColor(jsonDoc["red"], jsonDoc["green"], jsonDoc["blue"]); // set the LED color depending on the conditions
-    playSound(jsonDoc["alert"]); // play the buzzer if needed
+    caveId = jsonDoc["id"];
+    Serial.println("Cave ID: " + String(caveId));
   } else {
     Serial.print("Error recieving data. Error code: ");
     Serial.println(httpCode);
@@ -185,9 +205,17 @@ void loop() {
   printValues(humi, temp, ligth);
 
   // comunicate data to server
-  sendDataToServer(humi, temp, ligth);
+  sendDataToServer( temp,humi, ligth);
   delay(2000);
 
-  recieveData();
-  delay(2000);
+
+  currentState = digitalRead(PIN_BUTTON);
+
+  if(lastState == HIGH && currentState == LOW) {
+    Serial.println("The state changed");
+    getIdFromServer();
+  }
+
+  // save the last state
+  lastState = currentState;
 }

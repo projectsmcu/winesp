@@ -166,11 +166,34 @@ class _CavePageState extends State<CavePage> {
               onPressed: () {
                 widget.socket.sendDeleteCave(caveId.toString());
                 widget.socket.receiveDeleteCave(() {
-                  Navigator.of(context).pop();
                   widget.onDeleted();
                 });
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
               },
               child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleConnectCave() async {
+    //open a dialog to explain how to connect
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Connect to Cave'),
+          content: const Text(
+              'To connect to this cave, please press the button on the cave\'s esp32 board for 5 seconds.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Continue'),
             ),
           ],
         );
@@ -210,10 +233,25 @@ class _CavePageState extends State<CavePage> {
                 _handleEditCaveRoute(_cave.id);
               } else if (value == 'delete') {
                 _handleDeleteCave(_cave.id);
+              } else if (value == 'connect') {
+                widget.socket.connectCave(_cave.id.toString());
+                widget.socket.receiveConnectCave((data) {
+                  _handleConnectCave();
+                });
               }
             },
             itemBuilder: (BuildContext context) {
               return <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'connect',
+                  child: ListTile(
+                    leading: Icon(Icons.sensors),
+                    title: Text(
+                      'Connect',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
                 const PopupMenuItem<String>(
                   value: 'edit',
                   child: ListTile(

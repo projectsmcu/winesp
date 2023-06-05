@@ -199,7 +199,6 @@ class Sockets {
 
   void receiveLogIn(Function(List<dynamic>) callback) {
     socket.on("loggedIn", (data) {
-      print(data);
       callback(data);
     });
   }
@@ -229,4 +228,13 @@ class Sockets {
     var data = {'caveID': caveID, 'warning': warning, 'critical': critical, 'type': type};
     socket.emit('updateCaveValue', data);
   } 
+
+  void connectCave(String caveID) {
+    var data = {'caveID': caveID};
+    socket.emit('connectCave', data);
+  }
+
+  void receiveConnectCave(Function(List<dynamic>) callback) {
+    socket.on('caveConnected', ((data) => {callback(data)}));
+  }
 }

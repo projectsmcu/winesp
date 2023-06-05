@@ -1,5 +1,6 @@
+import time
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 import sqlite3
 import base64
@@ -9,6 +10,58 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
+
+global caveIdToAssign
+caveIdToAssign = 0
+
+
+@app.route('/exchange-data', methods=['POST'])
+def receive_data():
+    # get the json data
+    data = request.get_json()
+    temperature = data['temperature']
+    humidity = data['humidity']
+    light = data['light']
+    if light > 3500:
+        light = 100
+    else:
+        light = light/3500*100
+    caveId = data['caveId']
+    # print (humidity, temperature, light, caveId)
+    # insert the data into the database
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO cave_data (cave_id, temperature, humidity, light, time) VALUES (?, ?, ?, ?, ?)", (caveId, temperature, humidity,light , time.strftime('%Y-%m-%d %H:%M:%S')))
+    # print(time.strftime('%Y-%m-%d %H:%M:%S'))
+    conn.commit()
+    # get the warning and critical values for the cave
+    c.execute("SELECT temperatureWarning, temperatureCritical, humidityWarning, humidityCritical, lightWarning, lightCritical FROM cave_value WHERE cave_id = ?", (caveId,))
+    values = c.fetchone()
+    if values == None:
+        values = (10000., 1000., 10000., 10000., 10000., 100000.)
+    temperatureAlert, humidityAlert, lightAlert, criticalAlert = 0, 0, 0, 0
+    if temperature > values[0]:
+        # print("temperature alert with value " + str(values[0]) + " and temperature " + str(temperature))
+        temperatureAlert = 1
+    if humidity > values[2] :
+        # print("humidity alert with value " + str(values[2]) + " and humidity " + str(humidity))
+        humidityAlert = 1
+    if light > values[4]:
+        # print("light alert with value " + str(values[4]) + " and light " + str(light))
+        lightAlert = 1
+    if temperature > values[1] or humidity > values[3] or light > values[5]:
+        # print("critical alert")
+        criticalAlert = 1
+    conn.close()
+    payload = {'red': temperatureAlert, 'green': lightAlert, 'blue': humidityAlert, 'alert': criticalAlert}
+    return payload
+    
+
+@app.route('/get-id', methods=['GET'])
+def get_id():
+    payload = {'id': caveIdToAssign}
+    return payload
+
 @socketio.on('connect')
 def connect():
     print("a client connected")
@@ -16,6 +69,13 @@ def connect():
 @socketio.on('disconnect')
 def disconnect():
     print('Client disconnected')
+
+@socketio.on('connectCave')
+def connectCave(data):
+    global caveIdToAssign
+    caveIdToAssign = int(data['caveID'])
+    # print('Cave ready to be connected to the server' + str(caveIdToAssign))
+
 
 @socketio.on('getCavesHome')
 def getCave(user):
@@ -150,6 +210,7 @@ def deleteCave(data):
     conn.commit()
     c.execute("DELETE FROM wine WHERE cave_id = ?", (data['caveID'],))
     conn.commit()
+    c.execute("DELETE FROM cave_value WHERE cave_id = ?", (data['caveID'],))
     conn.close()
     socketio.emit('caveDeleted', [data['caveID']])
 
@@ -165,7 +226,7 @@ def addBottle(data):
     bottle_id = c.fetchone()[0]
     #save the image if there is one
     if data['bottleImage'] != 'no-image':
-        print('saving image')
+        # print('saving image')
         # convert from base64 to image and save it as bottle_id.jpg
         with open('images/bottles/' + str(bottle_id) + '.jpg', 'wb') as f:
             f.write(base64.b64decode(data['bottleImage']))
@@ -191,7 +252,7 @@ def modifyBottle(data):
     conn.commit()
     #save the image if there is one
     if data['bottleImage'] != 'no-image':
-        print('saving image')
+        # print('saving image')
         # convert from base64 to image and save it as bottle_id.jpg
         with open('images/bottles/' + str(data['bottleID']) + '.jpg', 'wb') as f:
             f.write(base64.b64decode(data['bottleImage']))
@@ -274,7 +335,7 @@ def getDataStats(data):
         temp.append(c.fetchone())
         caves.append(temp)
     conn.close()
-    print(caves)
+    # print(caves)
     socketio.emit('dataStats', caves)
 
 @socketio.on('updateCaveValue')
@@ -292,5 +353,6 @@ def updateCaveValue(data):
     socketio.emit('caveValueUpdated', "1")
 
 
+
 if __name__ == '__main__':
-    socketio.run(app,port=5021 ,host= '0.0.0.0')
+    socketio.run(app,port=5021 ,host= '0.0.0.0', debug=True)

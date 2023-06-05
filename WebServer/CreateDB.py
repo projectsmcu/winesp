@@ -82,9 +82,9 @@ initial_time = time.strftime('%Y-%m-%d %H:%M:%S')
 print(initial_time)
 
 for i in range(300):
-    c.execute("INSERT INTO cave_data VALUES (1, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) + 300*i))))
-    c.execute("INSERT INTO cave_data VALUES (2, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) + 300*i))))
-    c.execute("INSERT INTO cave_data VALUES (3, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) + 300*i))))
+    c.execute("INSERT INTO cave_data VALUES (1, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) - 300*i))))
+    c.execute("INSERT INTO cave_data VALUES (2, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) - 300*i))))
+    c.execute("INSERT INTO cave_data VALUES (3, ?, ?, ?, ?)", (random.uniform(0, 30), random.uniform(0, 100), random.uniform(0, 100), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.mktime(time.strptime(initial_time, '%Y-%m-%d %H:%M:%S')) - 300*i))))
 
 
 conn.commit()

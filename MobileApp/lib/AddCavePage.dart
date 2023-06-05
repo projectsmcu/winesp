@@ -77,7 +77,9 @@ class _AddCavePageState extends State<AddCavePage> {
                 final String caveName = _caveNameController.text;
                 final String caveLocation = _caveLocationController.text;
                 widget.socket.addCave(widget.userId, caveName, caveLocation);
-                widget.socket.receiveAddCave(() => widget.onCaveAdded());
+                widget.socket.receiveAddCave(() {
+                  widget.onCaveAdded();
+                });
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(

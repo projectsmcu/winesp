@@ -3,10 +3,12 @@ import 'dart:convert';
 import "dart:io";
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:wine_esp/AddBottlePage.dart';
 import 'package:wine_esp/AddCavePage.dart';
 import 'package:wine_esp/BottlePage.dart';
 import 'package:wine_esp/CavePage.dart';
+import 'package:wine_esp/ValuePage.dart';
 import 'ExpandableFAB.dart';
 import 'Sockets.dart';
 import 'CaveObject.dart';
@@ -33,6 +35,38 @@ class _HomePageState extends State<HomePage> {
     'Loading...',
     style: TextStyle(fontSize: 24),
   ));
+
+  @override
+  void didChangeDependencies() {
+    widget.socket.sendlistCavesHome(widget.userId);
+    widget.socket.receiveCaveListHome((data) {
+      if (data[0].length == 0) {
+        setState(() {
+          // make a widget that says no caves found in the middle of the screen
+          _caveCardList = Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'No caves found',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+              ]);
+        });
+      } else {
+        setState(() {
+          _caves = convertHome(data);
+          _caveCardList = _buildCaveCardList();
+        });
+      }
+    });
+    super.didChangeDependencies();
+  }
 
   // handle the /stats route
   void _handleCaveRoute(caveID) async {
@@ -71,7 +105,7 @@ class _HomePageState extends State<HomePage> {
                   });
                 }
               });
-              Navigator.of(context).pop();
+              didChangeDependencies();
             }),
       ),
     );
@@ -217,7 +251,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         onTap: () {
-          print(_caves[index].id);
           _handleCaveRoute(_caves[index].id);
         },
       ),
@@ -454,6 +487,14 @@ class _HomePageState extends State<HomePage> {
   void _showAction(int index) {
     switch (index) {
       case 0:
+        if (_caves.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No caves found'),
+            ),
+          );
+          return;
+        }
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -530,12 +571,34 @@ class _HomePageState extends State<HomePage> {
                     });
                   }
                 });
+                didChangeDependencies();
               },
             ),
           ),
         );
         break;
       case 2:
+        if (_caves.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No caves found'),
+            ),
+          );
+          return;
+        }
+        widget.socket.sendDataStats(widget.userId);
+        List<CaveObjectStats> stats;
+        widget.socket.receiveDataStats((data) {
+          stats = convertPageData(data);
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ValuePage(
+                      socket: widget.socket,
+                      cave: stats[0],
+                      type: 'temperature',
+                      onValueChanged: () {})));
+        });
         break;
     }
   }

@@ -21,8 +21,6 @@ class _StatsPageState extends State<StatsPage> {
   List<Color> gradientColors = const [Colors.lightGreen, Color(0xff108963)];
 
   List<CaveObjectStats> _stats = [];
-  double warningTemp = 0.0;
-  double criticalTemp = 0.0;
   String valueFilter = "";
 
   ScrollController _homeController = ScrollController();
@@ -215,7 +213,7 @@ class _StatsPageState extends State<StatsPage> {
     }
 
     for (var i = 0; i < stats[index].data.length; i++) {
-      light.add(stats[index].data[i].light);
+      light.add(stats[index].data[stats[index].data.length - i - 1].light);
       // time format is yyyy-mm-dd hh:mm:ss
       // first convert it to seconds since epoch
       time.add(stats[index].data[stats[index].data.length - i - 1].date);
@@ -254,6 +252,7 @@ class _StatsPageState extends State<StatsPage> {
                         time,
                         stats[index].lightWarning,
                         stats[index].lightCritical,
+                        "%",
                       ),
                     ),
                   ),
@@ -301,7 +300,7 @@ class _StatsPageState extends State<StatsPage> {
     }
 
     for (var i = 0; i < stats[index].data.length; i++) {
-      temp.add(stats[index].data[i].temperature);
+      temp.add(stats[index].data[stats[index].data.length - i - 1].temperature);
       // time format is yyyy-mm-dd hh:mm:ss
       // first convert it to seconds since epoch
       time.add(stats[index].data[stats[index].data.length - i - 1].date);
@@ -340,6 +339,7 @@ class _StatsPageState extends State<StatsPage> {
                         time,
                         stats[index].temperatureWarning,
                         stats[index].temperatureCritical,
+                        "°C",
                       ),
                     ),
                   ),
@@ -384,7 +384,7 @@ class _StatsPageState extends State<StatsPage> {
     }
 
     for (var i = 0; i < stats[index].data.length; i++) {
-      humi.add(stats[index].data[i].humidity);
+      humi.add(stats[index].data[stats[index].data.length - i - 1].humidity);
       // time format is yyyy-mm-dd hh:mm:ss
       // first convert it to seconds since epoch
       time.add(stats[index].data[stats[index].data.length - i - 1].date);
@@ -417,13 +417,8 @@ class _StatsPageState extends State<StatsPage> {
                     ),
                     child: LineChart(
                       // pass in the data for the line chart only light data contains in stats[index].data[].light
-                      mainData(
-                        index,
-                        humi,
-                        time,
-                        stats[index].humidityWarning,
-                        stats[index].humidityCritical,
-                      ),
+                      mainData(index, humi, time, stats[index].humidityWarning,
+                          stats[index].humidityCritical, '%'),
                     ),
                   ),
                 ),
@@ -490,7 +485,7 @@ class _StatsPageState extends State<StatsPage> {
     );
   }
 
-  LineChartData mainData(index, data, time, warningValue, criticalValue) {
+  LineChartData mainData(index, data, time, warningValue, criticalValue, unit) {
     List<FlSpot> spots = [];
     double minData = min(data) < warningValue ? min(data) : warningValue;
     double maxData = max(data) > criticalValue ? max(data) : criticalValue;
@@ -540,10 +535,14 @@ class _StatsPageState extends State<StatsPage> {
                 Widget text;
                 switch (value.toInt()) {
                   case 1:
-                    text = Text(time[1], style: style);
+                    text = time.length > 1
+                        ? Text(time[1], style: style)
+                        : const Text('');
                     break;
                   case 7:
-                    text = Text(time[7], style: style);
+                    text = time.length > 7
+                        ? Text(time[7], style: style)
+                        : const Text('');
                     break;
                   default:
                     text = const Text('', style: style);
@@ -663,11 +662,7 @@ class _StatsPageState extends State<StatsPage> {
           getTooltipItems: (value) {
             return value
                 .map((e) => LineTooltipItem(
-                    cutText(
-                        (((e.y.toDouble() - 1) / 10 * (maxData - minData)) +
-                                minData)
-                            .toString(),
-                        4),
+                    "${cutText("${((e.y.toDouble() - 1) / 10 * (maxData - minData)) + minData}", 4)} $unit",
                     const TextStyle(
                         color: Color(0xff222222),
                         fontSize: 14,
